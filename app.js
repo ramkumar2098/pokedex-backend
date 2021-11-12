@@ -1,13 +1,19 @@
 const express = require('express')
 const { Client } = require('pg')
 const cors = require('cors')
+const format = require('pg-format')
 
 const app = express()
 
 const client = new Client({
-  user: 'ramkumar2098',
-  password: 'test',
-  database: 'pokedex',
+  host: process.env.HOST,
+  database: process.env.DATABASE,
+  user: process.env.USER,
+  port: process.env.PSQL_PORT,
+  password: process.env.PASSWORD,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 })
 
 const db = client.connect()
@@ -18,33 +24,53 @@ const canBe = (variable, possibleValues) =>
   possibleValues.includes(variable) ? variable : possibleValues[0]
 
 app.get('/pokedex', (req, res) => {
-  let { column, orderBy, offset, limit, query } = req.query
+  let { column, orderBy, offset, limit, query = '' } = req.query
 
   column = canBe(column, ['id', 'name'])
   orderBy = canBe(orderBy, ['asc', 'desc'])
 
   const isAll = 'all' in req.query
+  const hasID = 'id' in req.query
 
-  db.then(() => {
-    const filterQueryText = query ? `WHERE name ILIKE '${query}%'` : ''
-    let queryText
+  db.then(async () => {
+    if (hasID) {
+      const result = await client.query('select * from pokemon where id = $1', [
+        req.query.id,
+      ])
+      res.send(result.rows)
+      return
+    }
     if (isAll) {
-      queryText = `select * from pokemon ${filterQueryText} order by ${column} ${orderBy}`
+      const sql = format(
+        'select * from pokemon where name ilike $1 order by %s %s',
+        column,
+        orderBy
+      )
+      const results = await client.query(sql, [`${query}%`])
+      res.send({ data: results.rows, count: results.rowCount })
     } else {
       if (isNaN(+offset)) offset = 0
       if (isNaN(+limit)) limit = 5
-      queryText = `select count(*) from pokemon ${filterQueryText}; select * from pokemon ${filterQueryText} order by ${column} ${orderBy} OFFSET ${offset} limit ${limit}`
+      const sql = format(
+        'select * from pokemon where name ilike $1 order by %s %s OFFSET $2 limit $3',
+        column,
+        orderBy
+      )
+      const { rows: countData } = await client.query(
+        'select count(*) from pokemon where name ilike $1',
+        [`${query}%`]
+      )
+      const { rows: data } = await client.query(sql, [
+        `${query}%`,
+        offset,
+        limit,
+      ])
+      res.send({ data, count: countData[0].count })
     }
-    return client.query(queryText)
+  }).catch(err => {
+    console.log(err)
+    res.send({ error: 'invalid query' })
   })
-    .then(results => {
-      if (isAll) {
-        res.send({ data: results.rows, count: results.rowCount })
-      } else {
-        res.send({ data: results[1].rows, count: results[0].rows[0].count })
-      }
-    })
-    .catch(console.log)
 })
 
-app.listen(8080)
+app.listen(process.env.PORT)
