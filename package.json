@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app",
-    "dev": "nodemon -r dotenv/config app"
+    "start": "node src/app",
+    "dev": "nodemon -r dotenv/config src/app"
   },
   "keywords": [],
   "author": "",
@@ -14,9 +14,11 @@
   "dependencies": {
     "axios": "^0.24.0",
     "cors": "^2.8.5",
-    "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "pg": "^8.7.1",
     "pg-format": "^1.0.4"
+  },
+  "devDependencies": {
+    "dotenv": "^10.0.0"
   }
 }
