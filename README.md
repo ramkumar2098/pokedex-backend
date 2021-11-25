@@ -16,6 +16,10 @@ https://expressjs-pokedex.herokuapp.com/pokedex
 
 `?all`
 
+### To get a particular pokemon:
+
+`?id`
+
 ### Filter:
 
 `?query`
