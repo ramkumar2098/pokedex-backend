@@ -32,17 +32,17 @@ By default the list is ascending on column `id`.
 
 `?orderBy`
 
-default: `asc`
+**default**: `asc`
 
-possible values: `asc`, `desc`
+**possible values**: `asc`, `desc`
 
 If the value is not `asc` or `desc`, then it will fallback to `asc`.
 
 `?column`
 
-default: `id`
+**default**: `id`
 
-possible values: `id`, `name`
+**possible values**: `id`, `name`
 
 If the value is not `id` or `name`, then it will fallback to `id`.
 
